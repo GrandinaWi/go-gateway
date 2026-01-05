@@ -10,13 +10,19 @@ import (
 func New(secret []byte, userURL, catalogURL, ordersURL string) http.Handler {
 	mux := http.NewServeMux()
 
-	// публичные маршруты
+	// USER
 	mux.Handle("/login", proxy.New(userURL))
 	mux.Handle("/register", proxy.New(userURL))
+	mux.Handle("/user", auth.Middleware(secret, proxy.New(userURL)))
 
-	// защищённые
+	// CATALOG
 	mux.Handle("/products", proxy.New(catalogURL))
+	mux.Handle("/products/", proxy.New(ordersURL))
+
+	// ORDERS
 	mux.Handle("/orders", auth.Middleware(secret, proxy.New(ordersURL)))
+	mux.Handle("/orders/", auth.Middleware(secret, proxy.New(ordersURL)))
+	mux.Handle("/health", proxy.New(ordersURL))
 
 	return mux
 }

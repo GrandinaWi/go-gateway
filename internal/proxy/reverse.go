@@ -7,7 +7,15 @@ import (
 )
 
 func New(target string) http.Handler {
-	u, _ := url.Parse(target)
+	targetURL, _ := url.Parse(target)
 
-	return httputil.NewSingleHostReverseProxy(u)
+	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+
+	originalDirector := proxy.Director
+	proxy.Director = func(req *http.Request) {
+		originalDirector(req)
+
+		req.Host = req.URL.Host
+	}
+	return proxy
 }

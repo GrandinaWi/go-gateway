@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"context"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -38,7 +38,8 @@ func Middleware(secret []byte, next http.Handler) http.Handler {
 		claims := token.Claims.(jwt.MapClaims)
 		userID := int64(claims["user_id"].(float64))
 
-		ctx := context.WithValue(r.Context(), UserIDKey, userID)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		req := r.Clone(r.Context())
+		req.Header.Set("X-User-ID", strconv.FormatInt(userID, 10))
+		next.ServeHTTP(w, req)
 	})
 }
